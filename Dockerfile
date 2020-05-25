@@ -17,8 +17,17 @@ FROM alpine:3.11.6
 
 LABEL maintainer="Ztj <ztj1993@gmail.com>"
 
-WORKDIR /app
+RUN apk add --no-cache supervisor
+RUN /usr/bin/echo_supervisord_conf > /etc/supervisord.conf
+RUN mkdir /etc/supervisor.d
+RUN mkdir /var/log/supervisor
+RUN sed -i 's/;\[inet_http_server]/\[inet_http_server]/g' /etc/supervisord.conf
+RUN sed -i 's/;port=127.0.0.1:9001/port=0.0.0.0:9999/g' /etc/supervisord.conf
 
 COPY --from=builder /app /app
+COPY ./supervisor.d /etc/supervisor.d
+COPY ./conf /app/conf
 
-RUN apk add --no-cache supervisor
+WORKDIR /app
+
+RUN supervisord --nodaemon
